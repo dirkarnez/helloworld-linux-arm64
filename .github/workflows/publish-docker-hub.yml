@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64 # linux/amd64,
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # <-- clone with complete history
+          
+      - run: |
+          docker build --platform linux/arm64 -t "polyuice/helloworld-linux-arm64:20240913" -f ./Dockerfile .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: 'polyuice/helloworld-linux-arm64:20240913'
